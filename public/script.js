@@ -1,6 +1,6 @@
 
 'use strict';
-
+const API = '';
 /* ─── DATA ──────────────────────────────────────────────── */
 const galleryData = [
   { src:'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&q=80', cat:'interior', title:'The Library Lounge', desc:'Interior · Evening Ambience' },
@@ -356,15 +356,58 @@ document.querySelectorAll('.star-btn').forEach(btn => {
   btn.addEventListener('click', () => { selectedStars = +btn.dataset.star; });
 });
 
-document.getElementById('review-form').addEventListener('submit', e => {
+document.getElementById('review-form').addEventListener('submit', async e => {
   e.preventDefault();
-  const s = document.getElementById('review-success');
-  document.getElementById('review-form').style.display='none';
-  s.classList.add('show');
+  try {
+    const res = await fetch(API + '/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('rv-name').value,
+        email: document.getElementById('rv-email').value,
+        stars: selectedStars,
+        comment: document.getElementById('rv-comment').value,
+      }),
+    });
+    if (!res.ok) { alert((await res.json()).error); return; }
+    document.getElementById('review-form').style.display = 'none';
+    document.getElementById('review-success').classList.add('show');
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+  }
 });
 
 /* ─── BOOKING FLOW ──────────────────────────────────────── */
-function bookingNextStep(current) {
+async function sendBooking() {
+  const slot = document.querySelector('.slot-btn.selected');
+  try {
+    const res = await fetch(API + '/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('bk-name').value,
+        email: document.getElementById('bk-email').value,
+        phone: document.getElementById('bk-phone').value,
+        guests: document.getElementById('bk-guests').value,
+        occasion: document.getElementById('bk-occasion').value,
+        checkIn: document.getElementById('bk-checkin').value,
+        checkOut: document.getElementById('bk-checkout').value,
+        timeSlot: slot ? slot.textContent : '',
+        requests: document.getElementById('bk-requests').value,
+      }),
+    });
+    if (!res.ok) { alert((await res.json()).error); return false; }
+    return true;
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+    return false;
+  }
+}
+async function bookingNextStep(current) {
+  if (current === 2) {
+    const ok = await sendBooking();
+    if (!ok) return;
+  }
   document.getElementById('booking-step-'+current).style.display='none';
   if (current === 2) {
     // Show confirmation
@@ -403,10 +446,26 @@ function selectSlot(btn) {
 }
 
 /* ─── CONTACT FORM ──────────────────────────────────────── */
-document.getElementById('contact-form').addEventListener('submit', e => {
+document.getElementById('contact-form').addEventListener('submit', async e => {
   e.preventDefault();
-  document.getElementById('contact-form').style.display='none';
-  document.getElementById('contact-success').classList.add('show');
+  try {
+    const res = await fetch(API + '/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('ct-name').value,
+        email: document.getElementById('ct-email').value,
+        phone: document.getElementById('ct-phone').value,
+        subject: document.getElementById('ct-subject').value,
+        message: document.getElementById('ct-msg').value,
+      }),
+    });
+    if (!res.ok) { alert((await res.json()).error); return; }
+    document.getElementById('contact-form').style.display = 'none';
+    document.getElementById('contact-success').classList.add('show');
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+  }
 });
 
 /* ─── MODAL ─────────────────────────────────────────────── */
@@ -421,22 +480,51 @@ function closeModal() {
   document.body.style.overflow='';
 }
 document.getElementById('booking-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
-document.getElementById('modal-form').addEventListener('submit', e => {
+document.getElementById('modal-form').addEventListener('submit', async e => {
   e.preventDefault();
-  document.getElementById('modal-form').style.display='none';
-  document.getElementById('modal-success').classList.add('show');
+  try {
+    const res = await fetch('http://localhost:3000/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('m-name').value,
+        email: document.getElementById('m-email').value,
+        checkIn: document.getElementById('m-checkin').value,
+        checkOut: document.getElementById('m-checkout').value,
+        guests: document.getElementById('m-guests').value,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error);
+      return;
+    }
+    document.getElementById('modal-form').style.display = 'none';
+    document.getElementById('modal-success').classList.add('show');
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+  }
 });
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
 /* ─── NEWSLETTER ────────────────────────────────────────── */
-function subscribeNewsletter() {
+async function subscribeNewsletter() {
   const input = document.getElementById('nl-email');
-  if (!input.value || !input.value.includes('@')) { input.style.borderColor='#e05050'; return; }
-  input.style.borderColor='var(--gold)';
-  document.querySelector('.newsletter-form').style.display='none';
-  document.getElementById('nl-success').style.display='block';
+  if (!input.value || !input.value.includes('@')) { input.style.borderColor = '#e05050'; return; }
+  try {
+    const res = await fetch(API + '/api/newsletter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: input.value }),
+    });
+    if (!res.ok) { input.style.borderColor = '#e05050'; return; }
+    input.style.borderColor = 'var(--gold)';
+    document.querySelector('.newsletter-form').style.display = 'none';
+    document.getElementById('nl-success').style.display = 'block';
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+  }
 }
-
 /* ─── YEAR ───────────────────────────────────────────────── */
 document.getElementById('year').textContent = new Date().getFullYear();
 
