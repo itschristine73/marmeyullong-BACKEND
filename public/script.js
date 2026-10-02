@@ -544,3 +544,70 @@ if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     el.style.transitionDuration = '0.01ms';
   });
 }
+
+//CHAT FAQS 
+document.getElementById('chat-toggle').addEventListener('click', () => {
+  const box = document.getElementById('chat-box');
+  if (box.classList.contains('open')) {
+    box.classList.remove('open');
+  } else {
+    box.style.display = 'flex';
+    requestAnimationFrame(() => box.classList.add('open'));
+  }
+});
+
+document.getElementById('chat-close').addEventListener('click', () => {
+  document.getElementById('chat-box').classList.remove('open');
+});
+
+function addMessage(text, from) {
+  const messages = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + from;
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showTyping() {
+  const messages = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+  addMessage(message, 'user');
+  input.value = '';
+  showTyping();
+  try {
+    const res = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+    await new Promise(r => setTimeout(r, 500));
+    removeTyping();
+    addMessage(data.reply, 'bot');
+  } catch (err) {
+    removeTyping();
+    addMessage('Sorry, I could not connect. Please try again.', 'bot');
+  }
+}
+
+document.getElementById('chat-send').addEventListener('click', sendChatMessage);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChatMessage();
+});

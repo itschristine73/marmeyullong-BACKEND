@@ -17,6 +17,38 @@ const reviews = [
   { name: 'Sophia Laurent', loc: 'Paris', stars: 5, text: 'Sample review text' },
   // copy the rest from reviewsData in script.js if you want
 ];
+//CHAT FAQ
+const faqs = [
+  { keywords: ['check in', 'checkin', 'check-in'], answer: 'Check-in is from 2:00 PM. Let us know if you need to arrive earlier.' },
+  { keywords: ['check out', 'checkout', 'check-out'], answer: 'Check-out is by 11:00 AM.' },
+  { keywords: ['pet', 'dog', 'cat'], answer: 'We currently do not allow pets, with the exception of service animals.' },
+  { keywords: ['breakfast', 'food', 'meal'], answer: 'Breakfast is included with every stay, served 8–10 AM.' },
+  { keywords: ['wifi', 'internet'], answer: 'Yes, free WiFi is available throughout the property.' },
+  { keywords: ['parking', 'car'], answer: 'Free on-site parking is available for all guests.' },
+  { keywords: ['cancel', 'refund', 'cancellation'], answer: 'Cancellations made 48 hours before check-in are fully refundable.' },
+  { keywords: ['price', 'cost', 'rate', 'how much'], answer: 'Rates vary by season and room type. Please check our Bookings page or contact us for exact pricing.' },
+  { keywords: ['availability', 'available', 'vacancy'], answer: 'You can check availability directly on our Bookings page by selecting your dates.' },
+  { keywords: ['contact', 'phone', 'number', 'reach'], answer: 'You can reach us via the Contact page or the WhatsApp button on the site.' },
+];
+
+function matchFaq(message) {
+  const text = message.toLowerCase();
+  for (const faq of faqs) {
+    if (faq.keywords.some(k => text.includes(k))) {
+      return faq.answer;
+    }
+  }
+  return "I'm not sure about that one — please reach out through our Contact page or WhatsApp and we'll help directly!";
+}
+
+app.post('/api/chat', (req, res) => {
+  const message = req.body.message;
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  const reply = matchFaq(message);
+  res.json({ reply });
+});
 
 // Small helper: are all required fields present?
 // Small helper: are all required fields present?
