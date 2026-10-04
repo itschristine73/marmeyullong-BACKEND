@@ -1,19 +1,9 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  family: 4,   // force IPv4, avoids Render's IPv6 routing issue
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function notifyAdmin(subject, text) {
-  transporter.sendMail({
-    from: process.env.GMAIL_USER,
+  resend.emails.send({
+    from: 'onboarding@resend.dev',
     to: process.env.ADMIN_EMAIL,
     subject,
     text,
