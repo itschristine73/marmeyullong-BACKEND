@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const { notifyAdmin } = require('./mailer');
+console.log('Resend key loaded:', !!process.env.RESEND_API_KEY);
 
 const app = express();
 app.use(cors());          // lets your frontend call this server
